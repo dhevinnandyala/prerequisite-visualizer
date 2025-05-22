@@ -2,7 +2,7 @@
 
 A React app to visualize and manage course prerequisites.
 
-It's very buggy! I don't know React :cry And I couldn't get the elk.js stuff to work. Please feel free to help improve it. 
+It's very buggy! I don't know React :cry And I couldn't get the elk.js stuff to work for edge routing to minimize overlaps for complex graphs. Please feel free to help improve it. I also haven't combed through the code yet for any mistakes, gonna do that at some point. I just wanted this to plan out my summer studies. 
 
 ## Prerequisites
 - [Node.js](https://nodejs.org/) (v14+)
