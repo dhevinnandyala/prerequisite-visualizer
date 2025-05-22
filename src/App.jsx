@@ -166,6 +166,19 @@ function App() {
     setShowGraph(!showGraph)
   }
 
+  // Function to find course index by name
+  const findCourseIndexByName = (courseName) => {
+    return courses.findIndex(course => course.course_name.toLowerCase() === courseName.toLowerCase())
+  }
+
+  // Function to handle edit by course name
+  const handleEditByCourseName = (courseName) => {
+    const index = findCourseIndexByName(courseName)
+    if (index !== -1) {
+      setEditingIndex(index)
+    }
+  }
+
   return (
     <div className="container">
       <div className="left-panel">
@@ -180,7 +193,7 @@ function App() {
         />
         <CourseList
           courses={[...sortedCourses].reverse()}
-          onEdit={setEditingIndex}
+          onEdit={handleEditByCourseName}
           onDelete={deleteCourse}
         />
         <button 
