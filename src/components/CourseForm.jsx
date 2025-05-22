@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 
-function CourseForm({ onAddCourse, onEditCourse, editingIndex, setEditingIndex, courses, onGenerateGraph }) {
+function CourseForm({ onAddCourse, onEditCourse, editingId, setEditingId, courses, onGenerateGraph }) {
   const [courseName, setCourseName] = useState('')
   const [prerequisites, setPrerequisites] = useState([])
   const [prerequisiteInput, setPrerequisiteInput] = useState('')
 
   useEffect(() => {
-    if (editingIndex !== -1) {
-      const course = courses[editingIndex]
-      setCourseName(course.course_name)
-      setPrerequisites([...course.course_prerequisites])
+    if (editingId !== null) {
+      const course = courses.find(c => c.id === editingId)
+      if (course) {
+        setCourseName(course.course_name)
+        setPrerequisites([...course.course_prerequisites])
+      }
     }
-  }, [editingIndex, courses])
+  }, [editingId, courses])
 
   // Add global keyboard event listener for Cmd/Ctrl + Enter
   useEffect(() => {
@@ -27,7 +29,7 @@ function CourseForm({ onAddCourse, onEditCourse, editingIndex, setEditingIndex, 
 
     window.addEventListener('keydown', handleGlobalKeyDown)
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [editingIndex, courseName, prerequisites]) // Include dependencies that handleSubmit uses
+  }, [editingId, courseName, prerequisites]) // Include dependencies that handleSubmit uses
 
   const addPrerequisite = () => {
     const prerequisite = prerequisiteInput.trim()
@@ -45,10 +47,10 @@ function CourseForm({ onAddCourse, onEditCourse, editingIndex, setEditingIndex, 
     e.preventDefault()
     if (!courseName.trim()) return
 
-    if (editingIndex === -1) {
+    if (editingId === null) {
       onAddCourse(courseName, prerequisites)
     } else {
-      onEditCourse(editingIndex, courseName, prerequisites)
+      onEditCourse(editingId, courseName, prerequisites)
     }
 
     // Reset form
@@ -58,7 +60,7 @@ function CourseForm({ onAddCourse, onEditCourse, editingIndex, setEditingIndex, 
   }
 
   const handleCancel = () => {
-    setEditingIndex(-1)
+    setEditingId(null)
     setCourseName('')
     setPrerequisites([])
     setPrerequisiteInput('')
@@ -119,7 +121,7 @@ function CourseForm({ onAddCourse, onEditCourse, editingIndex, setEditingIndex, 
       )}
 
       <div className="form-actions">
-        {editingIndex === -1 ? (
+        {editingId === null ? (
           <button type="submit" id="addCourseBtn">Add Course</button>
         ) : (
           <>

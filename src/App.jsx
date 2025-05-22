@@ -4,13 +4,34 @@ import CourseList from './components/CourseList'
 import PrerequisiteGraph from './components/PrerequisiteGraph'
 import './App.css'
 
+// Generate a unique ID for courses
+const generateUniqueId = () => {
+  return Math.random().toString(36).substr(2, 9)
+}
+
 function App() {
   // Initialize courses from localStorage if available
   const [courses, setCourses] = useState(() => {
     const savedCourses = localStorage.getItem('courses')
-    return savedCourses ? JSON.parse(savedCourses) : []
+    if (savedCourses) {
+      // Ensure all courses have IDs
+      const parsedCourses = JSON.parse(savedCourses)
+      return parsedCourses.map(course => ({
+        ...course,
+        id: course.id || generateUniqueId(),
+        course_prerequisites: course.course_prerequisites.map(prereq => {
+          // If prereq is a string (old format), find or create a course for it
+          if (typeof prereq === 'string') {
+            const existingCourse = parsedCourses.find(c => c.course_name === prereq)
+            return existingCourse ? existingCourse.id : generateUniqueId()
+          }
+          return prereq
+        })
+      }))
+    }
+    return []
   })
-  const [editingIndex, setEditingIndex] = useState(-1)
+  const [editingId, setEditingId] = useState(null)
   const [showGraph, setShowGraph] = useState(false)
 
   // Save courses to localStorage whenever they change
@@ -18,55 +39,55 @@ function App() {
     localStorage.setItem('courses', JSON.stringify(courses))
   }, [courses])
 
+  // Helper function to get course by ID
+  const getCourseById = (id) => courses.find(course => course.id === id)
+
+  // Helper function to get course by name
+  const getCourseByName = (name) => courses.find(course => course.course_name.toLowerCase() === name.toLowerCase())
+
   // Topological sort function
   const topologicalSort = (courses) => {
-    // Collect all unique course names and prerequisites
-    const allNodes = new Set();
-    courses.forEach(course => {
-      allNodes.add(course.course_name);
-      course.course_prerequisites.forEach(prereq => allNodes.add(prereq));
-    });
-
-    // Build graph and in-degree map for all nodes
+    // Build graph and in-degree map
     const graph = new Map();
     const inDegree = new Map();
-    allNodes.forEach(node => {
-      graph.set(node, []);
-      inDegree.set(node, 0);
+    const courseMap = new Map(courses.map(c => [c.id, c]));
+
+    // Initialize graph and in-degree
+    courses.forEach(course => {
+      graph.set(course.id, []);
+      inDegree.set(course.id, 0);
     });
 
     // Fill graph and in-degree
     courses.forEach(course => {
-      course.course_prerequisites.forEach(prereq => {
-        graph.get(prereq); // ensure prereq node exists
-        graph.get(course.course_name).push(prereq);
-        inDegree.set(prereq, inDegree.get(prereq)); // ensure prereq in-degree exists
-        inDegree.set(course.course_name, inDegree.get(course.course_name)); // ensure course in-degree exists
-        inDegree.set(prereq, inDegree.get(prereq) + 1);
+      course.course_prerequisites.forEach(prereqId => {
+        if (graph.has(prereqId)) {
+          graph.get(prereqId).push(course.id);
+          inDegree.set(course.id, (inDegree.get(course.id) || 0) + 1);
+        }
       });
     });
 
     // Initialize queue with nodes that have in-degree 0
-    const queue = Array.from(allNodes)
-      .filter(node => inDegree.get(node) === 0)
-      .sort((a, b) => a.localeCompare(b));
+    const queue = Array.from(courses)
+      .filter(course => inDegree.get(course.id) === 0)
+      .sort((a, b) => a.course_name.localeCompare(b.course_name));
 
     const result = [];
-    const courseMap = new Map(courses.map(c => [c.course_name, c]));
 
     // Process the queue
     while (queue.length > 0) {
-      const node = queue.shift();
-      if (courseMap.has(node)) {
-        result.push(courseMap.get(node));
-      }
-      // For each node that depends on this node
-      courses.forEach(dependent => {
-        if (dependent.course_prerequisites.includes(node)) {
-          inDegree.set(dependent.course_name, inDegree.get(dependent.course_name) - 1);
-          if (inDegree.get(dependent.course_name) === 0) {
-            queue.push(dependent.course_name);
-            queue.sort((a, b) => a.localeCompare(b));
+      const course = queue.shift();
+      result.push(course);
+      
+      // For each node that depends on this course
+      (graph.get(course.id) || []).forEach(dependentId => {
+        inDegree.set(dependentId, inDegree.get(dependentId) - 1);
+        if (inDegree.get(dependentId) === 0) {
+          const dependentCourse = courseMap.get(dependentId);
+          if (dependentCourse) {
+            queue.push(dependentCourse);
+            queue.sort((a, b) => a.course_name.localeCompare(b.course_name));
           }
         }
       });
@@ -84,74 +105,91 @@ function App() {
   // Use memoized sorted courses
   const sortedCourses = useMemo(() => topologicalSort(courses), [courses])
 
-  const addCourse = (courseName, prerequisites) => {
-    const existingIndex = courses.findIndex(
-      course => course.course_name.toLowerCase() === courseName.toLowerCase()
-    )
+  const addCourse = (courseName, prerequisiteNames) => {
+    const existingCourse = getCourseByName(courseName)
 
-    if (existingIndex !== -1) {
+    if (existingCourse) {
       alert('This course already exists!')
       return
     }
 
     // Create new courses for prerequisites that don't exist yet
-    const newPrerequisites = [...prerequisites]
-    prerequisites.forEach(prereq => {
-      const prereqExists = courses.some(
-        course => course.course_name.toLowerCase() === prereq.toLowerCase()
-      )
+    const newPrerequisites = []
+    prerequisiteNames.forEach(prereqName => {
+      let prereqCourse = getCourseByName(prereqName)
       
-      if (!prereqExists) {
-        setCourses(prevCourses => [...prevCourses, {
-          course_name: prereq,
+      if (!prereqCourse) {
+        const newId = generateUniqueId()
+        prereqCourse = {
+          id: newId,
+          course_name: prereqName,
           course_prerequisites: []
-        }])
+        }
+        setCourses(prevCourses => [...prevCourses, prereqCourse])
       }
+      newPrerequisites.push(prereqCourse.id)
     })
 
     // Add the main course
     setCourses(prevCourses => [...prevCourses, {
+      id: generateUniqueId(),
       course_name: courseName,
       course_prerequisites: newPrerequisites
     }])
   }
 
-  const editCourse = (index, courseName, prerequisites) => {
-    const duplicateIndex = courses.findIndex(
-      (course, i) => i !== index && course.course_name.toLowerCase() === courseName.toLowerCase()
+  const editCourse = (courseId, courseName, prerequisiteNames) => {
+    const courseToEdit = getCourseById(courseId)
+    if (!courseToEdit) return
+
+    const duplicateCourse = courses.find(
+      course => course.id !== courseId && course.course_name.toLowerCase() === courseName.toLowerCase()
     )
 
-    if (duplicateIndex !== -1) {
+    if (duplicateCourse) {
       alert('This course name already exists!')
       return
     }
 
-    // Find new prerequisites that need to be created
-    const newPrereqCourses = prerequisites
-      .filter(prereq => !courses.some(
-        course => course.course_name.toLowerCase() === prereq.toLowerCase()
-      ))
-      .map(prereq => ({
-        course_name: prereq,
-        course_prerequisites: []
-      }))
-
-    // Update courses with both new prerequisite courses and the edited course
-    setCourses(prevCourses => {
-      const updatedCourses = [...prevCourses]
-      updatedCourses[index] = {
-        course_name: courseName,
-        course_prerequisites: prerequisites
+    // Create new courses for prerequisites that don't exist yet
+    const newPrerequisites = []
+    prerequisiteNames.forEach(prereqName => {
+      let prereqCourse = getCourseByName(prereqName)
+      
+      if (!prereqCourse) {
+        const newId = generateUniqueId()
+        prereqCourse = {
+          id: newId,
+          course_name: prereqName,
+          course_prerequisites: []
+        }
+        setCourses(prevCourses => [...prevCourses, prereqCourse])
       }
-      return [...updatedCourses, ...newPrereqCourses]
+      newPrerequisites.push(prereqCourse.id)
     })
+
+    // Update the course
+    setCourses(prevCourses => prevCourses.map(course => 
+      course.id === courseId 
+        ? { ...course, course_name: courseName, course_prerequisites: newPrerequisites }
+        : course
+    ))
     
-    setEditingIndex(-1)
+    setEditingId(null)
   }
 
-  const deleteCourse = (index) => {
+  const deleteCourse = (courseId) => {
     if (confirm('Are you sure you want to delete this course?')) {
-      setCourses(prevCourses => prevCourses.filter((_, i) => i !== index))
+      // Remove the course and update all prerequisites that reference it
+      setCourses(prevCourses => {
+        const updatedCourses = prevCourses
+          .filter(course => course.id !== courseId)
+          .map(course => ({
+            ...course,
+            course_prerequisites: course.course_prerequisites.filter(prereqId => prereqId !== courseId)
+          }))
+        return updatedCourses
+      })
     }
   }
 
@@ -166,19 +204,6 @@ function App() {
     setShowGraph(!showGraph)
   }
 
-  // Function to find course index by name
-  const findCourseIndexByName = (courseName) => {
-    return courses.findIndex(course => course.course_name.toLowerCase() === courseName.toLowerCase())
-  }
-
-  // Function to handle edit by course name
-  const handleEditByCourseName = (courseName) => {
-    const index = findCourseIndexByName(courseName)
-    if (index !== -1) {
-      setEditingIndex(index)
-    }
-  }
-
   return (
     <div className="container">
       <div className="left-panel">
@@ -186,14 +211,14 @@ function App() {
         <CourseForm
           onAddCourse={addCourse}
           onEditCourse={editCourse}
-          editingIndex={editingIndex}
-          setEditingIndex={setEditingIndex}
+          editingId={editingId}
+          setEditingId={setEditingId}
           courses={courses}
           onGenerateGraph={toggleGraph}
         />
         <CourseList
           courses={[...sortedCourses].reverse()}
-          onEdit={handleEditByCourseName}
+          onEdit={setEditingId}
           onDelete={deleteCourse}
         />
         <button 
@@ -208,14 +233,7 @@ function App() {
         <div className="right-panel">
           <PrerequisiteGraph 
             courses={courses} 
-            onNodeClick={(index) => {
-              setEditingIndex(index);
-              // Scroll to the form
-              document.querySelector('.left-panel').scrollTo({
-                top: 0,
-                behavior: 'smooth'
-              });
-            }} 
+            onNodeClick={setEditingId}
           />
         </div>
       )}

@@ -264,62 +264,40 @@ function PrerequisiteGraph({ courses, onNodeClick }) {
     const allLevels = Array.from(levels.values());
     const minLevel = Math.min(...allLevels);
     const maxLevel = Math.max(...allLevels);
-    const courseNames = new Set(courses.map(c => c.course_name));
+    const courseMap = new Map(courses.map(c => [c.id, c]));
+    
     const nodes = courses.map((course) => ({
-      id: course.course_name,
+      id: course.id,
       data: {
         label: course.course_name,
-        color: interpolateColor(levels.get(course.course_name) ?? 0, minLevel, maxLevel),
-        onNodeClick: () => onNodeClick(courses.findIndex(c => c.course_name === course.course_name))
+        color: interpolateColor(levels.get(course.id) ?? 0, minLevel, maxLevel),
+        onNodeClick: () => onNodeClick(course.id)
       },
       type: 'blue',
     }));
+
     // Only create edges for valid prerequisites, no self-loops, no duplicates
     const edgeSet = new Set();
     const edges = courses.flatMap((course) =>
       course.course_prerequisites
-        .filter(prereq => prereq !== course.course_name && courseNames.has(prereq))
-        .map(prereq => {
-          const edgeId = `${prereq}->${course.course_name}`;
+        .filter(prereqId => prereqId !== course.id && courseMap.has(prereqId))
+        .map(prereqId => {
+          const edgeId = `${prereqId}->${course.id}`;
           if (edgeSet.has(edgeId)) return null;
           edgeSet.add(edgeId);
           return {
             id: edgeId,
-            source: prereq,
-            target: course.course_name,
+            source: prereqId,
+            target: course.id,
             animated: false,
-            style: { stroke: '#2563eb', strokeWidth: 2 }, // placeholder, will update after layout
+            style: { stroke: '#2563eb', strokeWidth: 2 },
             type: 'arrow',
             data: {},
           };
         })
         .filter(Boolean)
     );
-    // Debug: log the ELK graph object
-    const elkGraph = {
-      id: 'root',
-      layoutOptions: {
-        'elk.algorithm': 'layered',
-        'elk.direction': 'DOWN',
-        'elk.layered.spacing.nodeNodeBetweenLayers': '120',
-        'elk.spacing.nodeNode': '80',
-        'elk.layered.spacing.edgeNodeBetweenLayers': '40',
-        'elk.layered.spacing.edgeEdgeBetweenLayers': '40',
-        'elk.layered.nodePlacement.strategy': 'SIMPLE',
-        'elk.edgeRouting': 'SPLINES',
-      },
-      children: nodes.map((node) => ({
-        id: node.id,
-        width: nodeWidth,
-        height: nodeHeight,
-      })),
-      edges: edges.map((edge) => ({
-        id: edge.id,
-        sources: [edge.source],
-        targets: [edge.target],
-      })),
-    };
-    console.log('ELK graph', elkGraph);
+
     getLayoutedElementsElk(nodes, edges, 'TB').then((layoutedResult) => {
       // Group nodes by level
       const levelGroups = new Map();
@@ -328,17 +306,21 @@ function PrerequisiteGraph({ courses, onNodeClick }) {
         if (!levelGroups.has(level)) levelGroups.set(level, []);
         levelGroups.get(level).push(node);
       });
+
       // Compute min/max level for lightness
       const allLevels = Array.from(levelGroups.keys());
       const minLevel = Math.min(...allLevels);
       const maxLevel = Math.max(...allLevels);
+
       // Assign color per node: lightness by level, hue by index in level (sorted by id for consistency)
       const nodeColorMap = new Map();
       const newNodes = layoutedResult.nodes.map((node) => {
         const level = levels.get(node.id) ?? 0;
         let nodesInLevel = levelGroups.get(level);
-        // Sort nodes in this level by id (course name) for consistent color order
-        nodesInLevel = [...nodesInLevel].sort((a, b) => a.id.localeCompare(b.id));
+        // Sort nodes in this level by course name for consistent color order
+        nodesInLevel = [...nodesInLevel].sort((a, b) => 
+          courseMap.get(a.id).course_name.localeCompare(courseMap.get(b.id).course_name)
+        );
         const idx = nodesInLevel.findIndex(n => n.id === node.id);
         const nInLevel = nodesInLevel.length;
         // Spread hues evenly in [0, 360)
@@ -358,6 +340,7 @@ function PrerequisiteGraph({ courses, onNodeClick }) {
           },
         };
       });
+
       // Update edge color to match the target node's color
       const newEdges = layoutedResult.edges.map((edge) => {
         const targetColor = nodeColorMap.get(edge.target) || '#2563eb';
@@ -367,6 +350,7 @@ function PrerequisiteGraph({ courses, onNodeClick }) {
           data: { ...edge.data, color: targetColor },
         };
       });
+
       setLayouted({
         nodes: newNodes,
         edges: newEdges,
