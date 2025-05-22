@@ -179,7 +179,7 @@ function App() {
           onGenerateGraph={toggleGraph}
         />
         <CourseList
-          courses={sortedCourses}
+          courses={[...sortedCourses].reverse()}
           onEdit={setEditingIndex}
           onDelete={deleteCourse}
         />
@@ -193,7 +193,17 @@ function App() {
       </div>
       {showGraph && (
         <div className="right-panel">
-          <PrerequisiteGraph courses={courses} />
+          <PrerequisiteGraph 
+            courses={courses} 
+            onNodeClick={(index) => {
+              setEditingIndex(index);
+              // Scroll to the form
+              document.querySelector('.left-panel').scrollTo({
+                top: 0,
+                behavior: 'smooth'
+              });
+            }} 
+          />
         </div>
       )}
     </div>

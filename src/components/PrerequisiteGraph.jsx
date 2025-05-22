@@ -50,7 +50,9 @@ function BlueNode({ data }) {
         border: `2px solid ${data.color}`,
         minWidth: 120,
         transition: 'background 0.3s, border 0.3s',
+        cursor: 'pointer',
       }}
+      onClick={data.onNodeClick}
     >
       {data.label}
       <Handle type="target" position="top" style={{ opacity: 0 }} />
@@ -182,6 +184,13 @@ function getTopologicalLevels(courses) {
 async function getLayoutedElementsElk(nodes, edges, direction = 'TB') {
   // ELK layout config
   const elkDirection = direction === 'TB' ? 'DOWN' : 'RIGHT';
+  
+  // Find nodes with no prerequisites (root nodes)
+  const rootNodes = new Set(nodes.map(node => node.id));
+  edges.forEach(edge => {
+    rootNodes.delete(edge.target);
+  });
+  
   const graph = {
     id: 'root',
     layoutOptions: {
@@ -193,6 +202,12 @@ async function getLayoutedElementsElk(nodes, edges, direction = 'TB') {
       'elk.layered.spacing.edgeEdgeBetweenLayers': '40',
       'elk.layered.nodePlacement.strategy': 'SIMPLE',
       'elk.edgeRouting': 'SPLINES',
+      // Force root nodes to be in the first layer
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.layering.layerId': '0',
+      'elk.layered.layering.layerId.0': Array.from(rootNodes).join(' ')
     },
     children: nodes.map((node) => ({
       id: node.id,
@@ -241,7 +256,7 @@ async function getLayoutedElementsElk(nodes, edges, direction = 'TB') {
   };
 }
 
-function PrerequisiteGraph({ courses }) {
+function PrerequisiteGraph({ courses, onNodeClick }) {
   // Compute topological levels and layout with ELK
   const [layouted, setLayouted] = React.useState({ nodes: [], edges: [] });
   React.useEffect(() => {
@@ -254,7 +269,8 @@ function PrerequisiteGraph({ courses }) {
       id: course.course_name,
       data: {
         label: course.course_name,
-        color: interpolateColor(levels.get(course.course_name) ?? 0, minLevel, maxLevel), // placeholder, will update after layout
+        color: interpolateColor(levels.get(course.course_name) ?? 0, minLevel, maxLevel),
+        onNodeClick: () => onNodeClick(courses.findIndex(c => c.course_name === course.course_name))
       },
       type: 'blue',
     }));
@@ -368,11 +384,12 @@ function PrerequisiteGraph({ courses }) {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          panOnDrag={false}
+          panOnDrag={true}
           zoomOnScroll={true}
           nodesDraggable={false}
           nodesConnectable={false}
-          elementsSelectable={false}
+          elementsSelectable={true}
+          onNodeClick={(_, node) => node.data.onNodeClick()}
         >
           <Controls showInteractive={false} />
         </ReactFlow>
