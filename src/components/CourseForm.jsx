@@ -10,8 +10,15 @@ function CourseForm({ onAddCourse, onEditCourse, editingId, setEditingId, course
       const course = courses.find(c => c.id === editingId)
       if (course) {
         setCourseName(course.course_name)
-        setPrerequisites([...course.course_prerequisites])
+        // Create the course map and convert prerequisite IDs to names
+        const courseMap = new Map(courses.map(c => [c.id, c.course_name]))
+        setPrerequisites(course.course_prerequisites.map(prereqId => courseMap.get(prereqId) || 'Unknown Course'))
       }
+    } else {
+      // Reset form when not editing
+      setCourseName('')
+      setPrerequisites([])
+      setPrerequisiteInput('')
     }
   }, [editingId, courses])
 

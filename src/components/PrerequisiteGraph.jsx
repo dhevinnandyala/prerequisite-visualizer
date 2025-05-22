@@ -147,22 +147,22 @@ function getTopologicalLevels(courses) {
   const adj = new Map();
   const inDegree = new Map();
   courses.forEach(course => {
-    adj.set(course.course_name, []);
-    inDegree.set(course.course_name, 0);
+    adj.set(course.id, []);
+    inDegree.set(course.id, 0);
   });
   courses.forEach(course => {
-    course.course_prerequisites.forEach(prereq => {
-      if (adj.has(prereq)) adj.get(prereq).push(course.course_name);
-      inDegree.set(course.course_name, (inDegree.get(course.course_name) || 0) + 1);
+    course.course_prerequisites.forEach(prereqId => {
+      if (adj.has(prereqId)) adj.get(prereqId).push(course.id);
+      inDegree.set(course.id, (inDegree.get(course.id) || 0) + 1);
     });
   });
   // BFS from roots
   const level = new Map();
   const queue = [];
-  inDegree.forEach((deg, name) => {
+  inDegree.forEach((deg, id) => {
     if (deg === 0) {
-      level.set(name, 0);
-      queue.push(name);
+      level.set(id, 0);
+      queue.push(id);
     }
   });
   while (queue.length > 0) {

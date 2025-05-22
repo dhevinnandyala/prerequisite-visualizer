@@ -14,20 +14,18 @@ function App() {
   const [courses, setCourses] = useState(() => {
     const savedCourses = localStorage.getItem('courses')
     if (savedCourses) {
-      // Ensure all courses have IDs
-      const parsedCourses = JSON.parse(savedCourses)
-      return parsedCourses.map(course => ({
-        ...course,
-        id: course.id || generateUniqueId(),
-        course_prerequisites: course.course_prerequisites.map(prereq => {
-          // If prereq is a string (old format), find or create a course for it
-          if (typeof prereq === 'string') {
-            const existingCourse = parsedCourses.find(c => c.course_name === prereq)
-            return existingCourse ? existingCourse.id : generateUniqueId()
-          }
-          return prereq
-        })
-      }))
+      try {
+        const parsedCourses = JSON.parse(savedCourses)
+        // Validate the data structure
+        if (!Array.isArray(parsedCourses)) {
+          console.error('Invalid courses data in localStorage')
+          return []
+        }
+        return parsedCourses
+      } catch (e) {
+        console.error('Error parsing courses from localStorage:', e)
+        return []
+      }
     }
     return []
   })
@@ -36,7 +34,11 @@ function App() {
 
   // Save courses to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('courses', JSON.stringify(courses))
+    try {
+      localStorage.setItem('courses', JSON.stringify(courses))
+    } catch (e) {
+      console.error('Error saving courses to localStorage:', e)
+    }
   }, [courses])
 
   // Helper function to get course by ID
@@ -131,11 +133,12 @@ function App() {
     })
 
     // Add the main course
-    setCourses(prevCourses => [...prevCourses, {
+    const newCourse = {
       id: generateUniqueId(),
       course_name: courseName,
       course_prerequisites: newPrerequisites
-    }])
+    }
+    setCourses(prevCourses => [...prevCourses, newCourse])
   }
 
   const editCourse = (courseId, courseName, prerequisiteNames) => {
@@ -217,7 +220,7 @@ function App() {
           onGenerateGraph={toggleGraph}
         />
         <CourseList
-          courses={[...sortedCourses].reverse()}
+          courses={sortedCourses}
           onEdit={setEditingId}
           onDelete={deleteCourse}
         />
