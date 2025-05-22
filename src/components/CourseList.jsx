@@ -6,7 +6,7 @@ function CourseList({ courses, onEdit, onDelete }) {
           <div className="course-header">
             <h3>{course.course_name}</h3>
             <div className="course-actions">
-              <button className="edit-btn" onClick={() => onEdit(index)}>Edit</button>
+              <button className="edit-btn" onClick={() => onEdit(courses.findIndex(c => c.course_name === course.course_name))}>Edit</button>
               <button className="delete-btn" onClick={() => onDelete(index)}>Delete</button>
             </div>
           </div>
