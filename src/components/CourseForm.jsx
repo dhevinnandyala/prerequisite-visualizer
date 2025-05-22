@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 function CourseForm({ onAddCourse, onEditCourse, editingId, setEditingId, courses, onGenerateGraph }) {
   const [courseName, setCourseName] = useState('')
   const [prerequisites, setPrerequisites] = useState([])
   const [prerequisiteInput, setPrerequisiteInput] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const suggestionsRef = useRef(null)
 
   useEffect(() => {
     if (editingId !== null) {
@@ -36,13 +39,56 @@ function CourseForm({ onAddCourse, onEditCourse, editingId, setEditingId, course
 
     window.addEventListener('keydown', handleGlobalKeyDown)
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [editingId, courseName, prerequisites]) // Include dependencies that handleSubmit uses
+  }, [editingId, courseName, prerequisites])
+
+  // Handle clicks outside suggestions dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const filterSuggestions = (input) => {
+    const inputLower = input.toLowerCase()
+    return courses
+      .filter(course => 
+        course.course_name.toLowerCase().includes(inputLower) &&
+        !prerequisites.includes(course.course_name)
+      )
+      .map(course => course.course_name)
+  }
+
+  const handlePrerequisiteInputChange = (e) => {
+    const value = e.target.value
+    setPrerequisiteInput(value)
+    
+    if (value.trim()) {
+      const filtered = filterSuggestions(value)
+      setSuggestions(filtered)
+      setShowSuggestions(filtered.length > 0)
+    } else {
+      setSuggestions([])
+      setShowSuggestions(false)
+    }
+  }
+
+  const handleSuggestionClick = (suggestion) => {
+    setPrerequisiteInput(suggestion)
+    setShowSuggestions(false)
+  }
 
   const addPrerequisite = () => {
     const prerequisite = prerequisiteInput.trim()
-    if (prerequisite) {
+    if (prerequisite && !prerequisites.includes(prerequisite)) {
       setPrerequisites([...prerequisites, prerequisite])
       setPrerequisiteInput('')
+      setSuggestions([])
+      setShowSuggestions(false)
     }
   }
 
@@ -64,6 +110,8 @@ function CourseForm({ onAddCourse, onEditCourse, editingId, setEditingId, course
     setCourseName('')
     setPrerequisites([])
     setPrerequisiteInput('')
+    setSuggestions([])
+    setShowSuggestions(false)
   }
 
   const handleCancel = () => {
@@ -71,12 +119,20 @@ function CourseForm({ onAddCourse, onEditCourse, editingId, setEditingId, course
     setCourseName('')
     setPrerequisites([])
     setPrerequisiteInput('')
+    setSuggestions([])
+    setShowSuggestions(false)
   }
 
   const handlePrerequisiteKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      addPrerequisite()
+      if (showSuggestions && suggestions.length > 0) {
+        handleSuggestionClick(suggestions[0])
+      } else {
+        addPrerequisite()
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false)
     }
   }
 
@@ -103,15 +159,31 @@ function CourseForm({ onAddCourse, onEditCourse, editingId, setEditingId, course
 
       <div className="form-group">
         <label htmlFor="prerequisite">Prerequisite:</label>
-        <div className="prerequisite-input-group">
-          <input
-            type="text"
-            id="prerequisite"
-            value={prerequisiteInput}
-            onChange={(e) => setPrerequisiteInput(e.target.value)}
-            onKeyDown={handlePrerequisiteKeyDown}
-            placeholder="Enter prerequisite"
-          />
+        <div className="prerequisite-input-group" ref={suggestionsRef}>
+          <div className="prerequisite-input-wrapper">
+            <input
+              type="text"
+              id="prerequisite"
+              value={prerequisiteInput}
+              onChange={handlePrerequisiteInputChange}
+              onKeyDown={handlePrerequisiteKeyDown}
+              placeholder="Enter prerequisite"
+              autoComplete="off"
+            />
+            {showSuggestions && (
+              <div className="suggestions-dropdown">
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    className="suggestion-item"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <button type="button" onClick={addPrerequisite}>Add</button>
         </div>
       </div>
