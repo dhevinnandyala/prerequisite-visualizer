@@ -1,0 +1,269 @@
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --danger-color: #dc2626;
+  --danger-hover: #b91c1c;
+  --edit-color: #0284c7;
+  --edit-hover: #0369a1;
+  --background: #f8fafc;
+  --card-bg: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
+  line-height: 1.5;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  display: flex;
+  gap: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.left-panel {
+  flex: 0 0 400px;
+  background-color: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 0 1rem 1rem 0;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.right-panel {
+  flex: 1;
+  background-color: var(--card-bg);
+  padding: 0;
+  border-radius: 1rem 0 0 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem;
+  color: var(--text-primary);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.prerequisite-input-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.prerequisite-input-group input[type="text"] {
+  flex: 1;
+}
+
+.prerequisite-input-group button {
+  background-color: var(--primary-color);
+  color: white;
+  white-space: nowrap;
+}
+
+.prerequisite-input-group button:hover {
+  background-color: var(--primary-hover);
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-actions button {
+  flex: 0 0 auto;
+}
+
+#addCourseBtn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+#addCourseBtn:hover {
+  background-color: var(--primary-hover);
+}
+
+#saveEditBtn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+#saveEditBtn:hover {
+  background-color: var(--primary-hover);
+}
+
+#cancelEditBtn {
+  background-color: var(--text-secondary);
+  color: white;
+}
+
+#cancelEditBtn:hover {
+  background-color: var(--text-primary);
+}
+
+.generate-graph-btn {
+  margin-left: auto;
+  background-color: var(--edit-color);
+  color: white;
+}
+
+.generate-graph-btn:hover {
+  background-color: var(--edit-hover);
+}
+
+.prerequisite-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--background);
+  border-radius: 0.5rem;
+}
+
+.prerequisite-item button {
+  margin-left: 0.75rem;
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.prerequisite-item button:hover {
+  background-color: var(--danger-hover);
+}
+
+#courseList {
+  margin-top: 2rem;
+}
+
+.course-item {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.course-item:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.course-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.edit-btn {
+  background-color: var(--edit-color);
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: var(--edit-hover);
+}
+
+.delete-btn {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: var(--danger-hover);
+}
+
+.prerequisites-display {
+  margin-left: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.graph-container {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.graph-container h2 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
