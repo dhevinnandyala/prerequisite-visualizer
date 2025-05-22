@@ -1,13 +1,22 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import CourseForm from './components/CourseForm'
 import CourseList from './components/CourseList'
 import PrerequisiteGraph from './components/PrerequisiteGraph'
 import './App.css'
 
 function App() {
-  const [courses, setCourses] = useState([])
+  // Initialize courses from localStorage if available
+  const [courses, setCourses] = useState(() => {
+    const savedCourses = localStorage.getItem('courses')
+    return savedCourses ? JSON.parse(savedCourses) : []
+  })
   const [editingIndex, setEditingIndex] = useState(-1)
   const [showGraph, setShowGraph] = useState(false)
+
+  // Save courses to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('courses', JSON.stringify(courses))
+  }, [courses])
 
   // Topological sort function
   const topologicalSort = (courses) => {
@@ -146,6 +155,13 @@ function App() {
     }
   }
 
+  const resetAllCourses = () => {
+    if (confirm('Are you sure you want to clear all courses? This action cannot be undone.')) {
+      setCourses([])
+      localStorage.removeItem('courses')
+    }
+  }
+
   const toggleGraph = () => {
     setShowGraph(!showGraph)
   }
@@ -167,6 +183,13 @@ function App() {
           onEdit={setEditingIndex}
           onDelete={deleteCourse}
         />
+        <button 
+          className="reset-btn" 
+          onClick={resetAllCourses}
+          style={{ marginTop: '1rem', width: '100%' }}
+        >
+          Clear All Courses
+        </button>
       </div>
       {showGraph && (
         <div className="right-panel">

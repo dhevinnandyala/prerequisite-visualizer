@@ -40,6 +40,29 @@ coverage
 .eslintcache
 .stylelintcache
 
+# Build output
+build/
+out/
+.next/
+.nuxt/
+.output/
+
+# Package manager
+.pnpm-store/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+tmp/
+
 # Misc
 .DS_Store
 Thumbs.db

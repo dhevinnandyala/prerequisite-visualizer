@@ -53,8 +53,8 @@ function BlueNode({ data }) {
       }}
     >
       {data.label}
-      <Handle type="target" position="top" style={{ background: '#1e40af', border: 'none' }} />
-      <Handle type="source" position="bottom" style={{ background: '#1e40af', border: 'none' }} />
+      <Handle type="target" position="top" style={{ opacity: 0 }} />
+      <Handle type="source" position="bottom" style={{ opacity: 0 }} />
     </div>
   );
 }
@@ -374,7 +374,6 @@ function PrerequisiteGraph({ courses }) {
           nodesConnectable={false}
           elementsSelectable={false}
         >
-          <Background />
           <Controls showInteractive={false} />
         </ReactFlow>
       </div>
