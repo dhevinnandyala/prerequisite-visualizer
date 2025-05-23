@@ -27,6 +27,10 @@ function CourseList({ courses, onEdit, onDelete }) {
           </div>
         </div>
       ))}
+      <div className="how-to-use">
+        <h3>How to Use</h3>
+        <p>This tool helps visualize course prerequisites in a skill-tree graph. Add courses by typing their name and pressing Enter or the Add Course button. For prerequisites, type each prerequisite name and press Enter to add it. Use Cmd+Enter to save a course. Edit courses by clicking the Edit button on their card or clicking them in the graph visualization. Click generate graph to see the skill-tree graph.</p>
+      </div>
     </div>
   )
 }

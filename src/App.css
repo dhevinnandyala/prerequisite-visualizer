@@ -325,3 +325,23 @@ button:hover {
 .suggestion-item:last-child {
   border-radius: 0 0 0.5rem 0.5rem;
 }
+
+.how-to-use {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--background);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+}
+
+.how-to-use h3 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.how-to-use p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
