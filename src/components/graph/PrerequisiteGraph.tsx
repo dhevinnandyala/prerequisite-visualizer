@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -6,6 +6,8 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
+  ReactFlowProvider,
   type NodeTypes,
   type EdgeTypes,
 } from '@xyflow/react';
@@ -13,26 +15,47 @@ import '@xyflow/react/dist/style.css';
 import { useCourseStore } from '../../stores/courseStore';
 import { useUiStore } from '../../stores/uiStore';
 import { useGraphLayout } from '../../hooks/useGraphLayout';
+import { levelToColor } from '../../lib/graph';
 import { CourseNode } from './CourseNode';
 import { PrerequisiteEdge } from './PrerequisiteEdge';
 
 const nodeTypes: NodeTypes = { course: CourseNode };
 const edgeTypes: EdgeTypes = { prerequisite: PrerequisiteEdge };
 
-export function PrerequisiteGraph() {
+function PrerequisiteGraphInner() {
   const courses = useCourseStore((s) => s.courses());
   const showGraph = useUiStore((s) => s.showGraph);
   const setEditingId = useUiStore((s) => s.setEditingCourseId);
   const setSidebarOpen = useUiStore((s) => s.setSidebarOpen);
+  const { fitView } = useReactFlow();
 
   const layout = useGraphLayout(courses);
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     setNodes(layout.nodes);
     setEdges(layout.edges);
+    setDirty(false);
   }, [layout, setNodes, setEdges]);
+
+  const handleNodesChange: typeof onNodesChange = useCallback(
+    (changes) => {
+      onNodesChange(changes);
+      if (changes.some((c) => c.type === 'position' && 'dragging' in c && c.dragging)) {
+        setDirty(true);
+      }
+    },
+    [onNodesChange],
+  );
+
+  const regenerate = useCallback(() => {
+    setNodes(layout.nodes);
+    setEdges(layout.edges);
+    setDirty(false);
+    setTimeout(() => fitView({ padding: 0.2 }), 0);
+  }, [layout, setNodes, setEdges, fitView]);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: { id: string }) => {
@@ -90,10 +113,18 @@ export function PrerequisiteGraph() {
   return (
     <div className="w-full h-full" style={{ ['--edge-color' as string]: isDark ? '#94a3b8' : '#64748b' }}>
       {arrowMarker}
+      {dirty && (
+        <button
+          onClick={regenerate}
+          className="absolute top-3 right-3 z-10 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 shadow-md transition-colors"
+        >
+          Regenerate Layout
+        </button>
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
@@ -114,11 +145,19 @@ export function PrerequisiteGraph() {
         <MiniMap
           nodeColor={(node) => {
             const data = node.data as unknown as { level: number; maxLevel: number };
-            return `hsl(${210 + (data.level / Math.max(data.maxLevel, 1)) * 120}, 70%, 50%)`;
+            return levelToColor(data.level, data.maxLevel, isDark, useUiStore.getState().colorTheme);
           }}
           className="!bg-gray-100 dark:!bg-gray-800 !border-gray-200 dark:!border-gray-700"
         />
       </ReactFlow>
     </div>
+  );
+}
+
+export function PrerequisiteGraph() {
+  return (
+    <ReactFlowProvider>
+      <PrerequisiteGraphInner />
+    </ReactFlowProvider>
   );
 }

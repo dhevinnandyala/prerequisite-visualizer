@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export type Theme = 'light' | 'dark' | 'system';
+export type ColorTheme = 'ocean' | 'sunset' | 'forest';
 
 interface Toast {
   id: string;
@@ -10,12 +11,14 @@ interface Toast {
 
 interface UiStore {
   theme: Theme;
+  colorTheme: ColorTheme;
   sidebarOpen: boolean;
   editingCourseId: string | null;
   showGraph: boolean;
   toasts: Toast[];
 
   setTheme: (theme: Theme) => void;
+  setColorTheme: (colorTheme: ColorTheme) => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   setEditingCourseId: (id: string | null) => void;
@@ -26,14 +29,23 @@ interface UiStore {
 
 function loadTheme(): Theme {
   try {
-    return (localStorage.getItem('theme') as Theme) ?? 'system';
+    return (localStorage.getItem('theme') as Theme) ?? 'dark';
   } catch {
     return 'system';
   }
 }
 
+function loadColorTheme(): ColorTheme {
+  try {
+    return (localStorage.getItem('colorTheme') as ColorTheme) ?? 'forest';
+  } catch {
+    return 'ocean';
+  }
+}
+
 export const useUiStore = create<UiStore>()((set) => ({
   theme: loadTheme(),
+  colorTheme: loadColorTheme(),
   sidebarOpen: true,
   editingCourseId: null,
   showGraph: false,
@@ -42,6 +54,11 @@ export const useUiStore = create<UiStore>()((set) => ({
   setTheme: (theme) => {
     localStorage.setItem('theme', theme);
     set({ theme });
+  },
+
+  setColorTheme: (colorTheme) => {
+    localStorage.setItem('colorTheme', colorTheme);
+    set({ colorTheme });
   },
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),

@@ -1,11 +1,13 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { CourseNodeData } from '../../types/graph';
 import { levelToColor } from '../../lib/graph';
+import { useUiStore } from '../../stores/uiStore';
 
 export function CourseNode({ data }: NodeProps) {
   const nodeData = data as unknown as CourseNodeData;
   const isDark = document.documentElement.classList.contains('dark');
-  const bgColor = levelToColor(nodeData.level, nodeData.maxLevel, isDark);
+  const colorTheme = useUiStore((s) => s.colorTheme);
+  const bgColor = levelToColor(nodeData.level, nodeData.maxLevel, isDark, colorTheme);
 
   return (
     <div

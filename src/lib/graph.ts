@@ -86,13 +86,31 @@ export function layoutGraph(courses: Course[]): LayoutResult {
   return { nodes, edges };
 }
 
-export function levelToColor(level: number, maxLevel: number, dark: boolean): string {
-  if (maxLevel === 0) {
-    return dark ? 'hsl(210, 70%, 45%)' : 'hsl(210, 80%, 55%)';
-  }
-  const t = level / maxLevel;
-  const hue = 210 + t * 120; // blue -> green
-  const sat = dark ? 65 : 75;
-  const light = dark ? 40 : 50;
+import type { ColorTheme } from '../stores/uiStore';
+
+interface ColorRange {
+  hueStart: number;
+  hueEnd: number;
+  sat: [number, number]; // [dark, light]
+  light: [number, number]; // [dark, light]
+}
+
+const colorRanges: Record<ColorTheme, ColorRange> = {
+  ocean: { hueStart: 210, hueEnd: 330, sat: [65, 75], light: [40, 50] },
+  sunset: { hueStart: 10, hueEnd: 55, sat: [70, 80], light: [38, 48] },
+  forest: { hueStart: 120, hueEnd: 270, sat: [50, 60], light: [35, 45] },
+};
+
+export function levelToColor(
+  level: number,
+  maxLevel: number,
+  dark: boolean,
+  colorTheme: ColorTheme = 'ocean',
+): string {
+  const range = colorRanges[colorTheme];
+  const t = maxLevel === 0 ? 0 : level / maxLevel;
+  const hue = range.hueStart + t * (range.hueEnd - range.hueStart);
+  const sat = dark ? range.sat[0] : range.sat[1];
+  const light = dark ? range.light[0] : range.light[1];
   return `hsl(${hue}, ${sat}%, ${light}%)`;
 }

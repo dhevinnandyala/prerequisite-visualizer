@@ -31,7 +31,7 @@ export function importWorkspace(json: string): { courses: Course[]; name: string
   try {
     const data = JSON.parse(json) as ExportData;
     if (data.version !== 2 || !data.workspace || !Array.isArray(data.workspace.courses)) {
-      return 'Invalid file format. Expected a prerequisite visualizer export file.';
+      return 'Invalid file format. Expected a PrereqTree export file.';
     }
 
     const courseIds = new Set(data.workspace.courses.map((c) => c.id));
