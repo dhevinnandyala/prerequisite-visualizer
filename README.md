@@ -2,7 +2,7 @@
 
 An interactive tool for visualizing course prerequisites as a directed acyclic graph. Plan your learning path by adding courses and their dependencies, then explore the graph to understand the order you need to tackle them.
 
-**Live demo:** [dhevinnandyala.com/prerequisite-visualizer](https://dhevinnandyala.com/prerequisite-visualizer)
+**Live at:** [dhevinnandyala.com/prerequisite-visualizer](https://dhevinnandyala.com/prerequisite-visualizer)
 
 ## Features
 
