@@ -1,0 +1,32 @@
+# PrereqTree
+
+> Interactive web application for visualizing course prerequisites as a directed acyclic graph (DAG).
+
+## About
+
+PrereqTree is a free, open-source tool that helps students and educators visualize course prerequisites in an interactive skill-tree style graph. Users can create courses, define prerequisite relationships, and see the full dependency chain laid out automatically using dagre graph layout.
+
+## Features
+
+- Add courses and define prerequisite relationships between them
+- Automatic DAG layout with interactive graph visualization (pan, zoom, drag)
+- Multiple workspaces to organize different course plans
+- Color themes (Ocean, Sunset, Forest) with dark mode support
+- Import/export workspaces as JSON files (with drag-and-drop support)
+- Circular dependency detection to prevent invalid prerequisite chains
+- All data stored locally in the browser (no account or server required)
+
+## Tech Stack
+
+- React 19, TypeScript, Zustand, Tailwind CSS v4
+- React Flow (@xyflow/react) for graph rendering
+- Dagre for automatic directed graph layout
+- Vite for build tooling
+- Deployed on GitHub Pages
+
+## Links
+
+- Website: https://dhevinnandyala.com/prerequisite-visualizer
+- Source Code: https://github.com/dhevinnandyala/prerequisite-visualizer
+- Author: Dhevin Nandyala (https://dhevinnandyala.com)
+- License: MIT
